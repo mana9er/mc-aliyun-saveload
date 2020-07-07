@@ -2,10 +2,10 @@ import re
 from PyQt5 import QtCore
 from . import utils, conf
 
+
 class BackupWorker(QtCore.QObject):
     complete = QtCore.pyqtSignal(dict)
-    
-    
+
     def __init__(self):
         super().__init__()
         self.info = None
@@ -89,5 +89,3 @@ class CountdownWorker(QtCore.QObject):
             self.countdown_timer.stop()
             self.state = 0
             self.info = None
-        
-        

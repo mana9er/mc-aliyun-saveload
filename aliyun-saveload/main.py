@@ -1,6 +1,8 @@
+import sys
 import time
 from PyQt5 import QtCore
 from . import utils, worker, conf
+
 
 class SaveLoad(QtCore.QObject):
     cmd_prefix = '!sl '
@@ -23,7 +25,7 @@ class SaveLoad(QtCore.QObject):
                 raise utils.InitError('dependency mcBasicLib not found.')
         except:
             self.log.error(str(sys.exc_info()[0]) + str(sys.exc_info()[1]))
-            self.log.error('Plugin aliyun saveload is not going to work.')
+            self.log.error('Plugin aliyun-saveload is not going to work.')
             return
         
         # create workers, thread and timer
@@ -43,17 +45,18 @@ class SaveLoad(QtCore.QObject):
         self.busy_restore = False
         self.mclib.sig_input.connect(self.on_input)
 
-        self.sig_prepare_backup.connect(self.backup_worker.prepare) # carry backup info, F->T
-        self.core.sig_server_output.connect(self.backup_worker.wait_flush) # check if flush is completed
-        self.sig_backup_immediately.connect(self.backup_worker.start) # if not running, go ahead
-        self.backup_worker.complete.connect(self.on_backup_complete) # carry backup info, T->F
+        self.sig_prepare_backup.connect(self.backup_worker.prepare)  # carry backup info, F->T
+        self.core.sig_server_output.connect(self.backup_worker.wait_flush)  # check if flush is completed
+        self.sig_backup_immediately.connect(self.backup_worker.start)  # if not running, go ahead
+        self.backup_worker.complete.connect(self.on_backup_complete)  # carry backup info, T->F
 
-        self.sig_prepare_restore.connect(self.countdown_worker.start) # carry target backup info, F->T
-        self.sig_confirm_restore.connect(self.countdown_worker.confirm) # start counting down if in confirming period
-        self.countdown_worker.timeout.connect(self.on_restore_timeout) # T->F
-        self.countdown_worker.count.connect(self.on_restore_count) # carry second number
-        self.countdown_worker.trigger.connect(self.on_restore_trigger) # carry target backup info, shutdown server, unzip, T->F before restarting
-        self.sig_cancel_restore.connect(self.countdown_worker.cancel) # T->F
+        self.sig_prepare_restore.connect(self.countdown_worker.start)  # carry target backup info, F->T
+        self.sig_confirm_restore.connect(self.countdown_worker.confirm)  # start counting down if in confirming period
+        self.countdown_worker.timeout.connect(self.on_restore_timeout)  # T->F
+        self.countdown_worker.count.connect(self.on_restore_count)  # carry second number
+        self.countdown_worker.trigger.connect(self.on_restore_trigger)
+        # carry target backup info, shutdown server, unzip, T->F before restarting
+        self.sig_cancel_restore.connect(self.countdown_worker.cancel)  # T->F
         
         # build callback dict
         self.cmd_list = {
@@ -233,5 +236,3 @@ class SaveLoad(QtCore.QObject):
                 self.auto_backup_remain = 1
                 self.broadcast('Auto backup canceled due to busy status, retry 1h later')
         utils.dump_timer(self.auto_backup_remain)
-        
-                

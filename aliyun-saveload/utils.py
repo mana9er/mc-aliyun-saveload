@@ -7,13 +7,16 @@ import oss2
 from . import conf
 from zipfile import ZipFile, ZIP_DEFLATED
 
+
 class InitError(Exception):
     pass
+
 
 def init_assert(expr, msg):
     if not expr:
         raise InitError(msg)
-        
+
+
 def convert_info(info_dict):
     return {
         'x-oss-meta-time': str(info_dict['time']),
@@ -21,12 +24,14 @@ def convert_info(info_dict):
         'x-oss-meta-description': bytes(info_dict['description'], encoding='utf-8')
     }
 
+
 def convert_info_back(headers):
     return {
         'time': int(headers['x-oss-meta-time']),
         'creator': headers['x-oss-meta-creator'],
         'description': str(bytes(headers['x-oss-meta-description'], encoding='latin-1'), encoding='utf-8')
     }
+
 
 def checkobj(name):
     try:
@@ -38,6 +43,7 @@ def checkobj(name):
     except:
         return None
 
+
 def get_backup_list():
     res = []
     for obj in oss2.ObjectIterator(conf.config.bucket):
@@ -47,10 +53,12 @@ def get_backup_list():
     res.sort(key=lambda v: v['time'])
     return res
 
+
 def dump_timer(timer):
     filename = conf.config.timer_filename
     with open(filename, 'w', encoding='utf-8') as f:
         f.write(str(timer))
+
 
 def load_timer():
     filename = conf.config.timer_filename
@@ -65,6 +73,7 @@ def load_timer():
     init_assert(timer > 0, 'Expecting positive timer')
     return timer
 
+
 def pack_upload(info):
     headers = convert_info(info)
     name = str(info['time'])
@@ -75,6 +84,7 @@ def pack_upload(info):
                 zipf.write(os.path.join(root, f))
     conf.config.bucket.put_object_from_file(name, tmp_filename, headers=headers)
     os.remove(tmp_filename)
+
 
 def download_unpack(info):
     name = str(info['time'])
@@ -88,9 +98,11 @@ def download_unpack(info):
     shutil.unpack_archive(tmp_filename, '.')
     os.remove(tmp_filename)
 
+
 def try_remove(info):
     name = str(info['time'])
     conf.config.bucket.delete_object(name)
+
 
 def format_description(backup):
     time_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup['time']))

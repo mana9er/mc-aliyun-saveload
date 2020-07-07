@@ -22,20 +22,28 @@ class Config:
         self.auth = oss2.Auth(accesskey_id, accesskey_secret)
         self.bucket = oss2.Bucket(self.auth, endpoint, bucket_name)
         self.tmp_path = config_dict['tmp-path']
-        utils.init_assert((self.permission_level == 'op') or (self.permission_level == 'any'), 'permission-level should be op or any')
-        utils.init_assert(isinstance(self.max_backup_num, int) and (self.max_backup_num > 0), 'max-backup-num should be positive integer')
+        utils.init_assert((self.permission_level == 'op') or (self.permission_level == 'any'),
+                          'permission-level should be op or any')
+        utils.init_assert(isinstance(self.max_backup_num, int) and (self.max_backup_num > 0),
+                          'max-backup-num should be positive integer')
         utils.init_assert(self.format == 'zip', 'currently support zip format only')
-        utils.init_assert(isinstance(self.restore_waiting, int) and (self.restore_waiting > 0), 'restore-waiting-sec should be positive integer')
-        utils.init_assert(isinstance(self.restore_countdown, int) and (self.restore_countdown > 0), 'restore-countdown-sec should be positive integer')
-        utils.init_assert(isinstance(self.auto_backup_interval, int) and (self.auto_backup_interval > 0), 'auto-backup-hours should be positive integer')
-        utils.init_assert(os.path.isdir(self.tmp_path), 'tmp-path is not a valid directory')
+        utils.init_assert(isinstance(self.restore_waiting, int) and (self.restore_waiting > 0),
+                          'restore-waiting-sec should be positive integer')
+        utils.init_assert(isinstance(self.restore_countdown, int) and (self.restore_countdown > 0),
+                          'restore-countdown-sec should be positive integer')
+        utils.init_assert(isinstance(self.auto_backup_interval, int) and (self.auto_backup_interval > 0),
+                          'auto-backup-hours should be positive integer')
+        utils.init_assert(os.path.isdir(self.tmp_path),
+                          'tmp-path is not a valid directory')
 
 
 def load_text():
     return ('"!sl help": show this help message.\n'
-    '"!sl list": list the existing backups.\n'
-    '"!sl backup [description]": make a backup for the current server status. You can add description by adding optional argument to the end.\n'
-    '"!sl restore <last | int:id>": use the selected backup to restore the server. You can use keyword "last" to indicate the latest backup. This command requires confirmation.\n'
-    '"!sl confirm": confirm the restoration. Once confirmed, the count down will start immediately.\n'
-    '"!sl cancel": cancel the restoration. Can be called before or after confirmation.\n'
-    '"!sl rm <int:id>": remove a backup by id')
+            '"!sl list": list the existing backups.\n'
+            '"!sl backup [description]": make a backup for the current server status. '
+            'You can add description by adding optional argument to the end.\n'
+            '"!sl restore <last | int:id>": use the selected backup to restore the server. '
+            'You can use keyword "last" to indicate the latest backup. This command requires confirmation.\n'
+            '"!sl confirm": confirm the restoration. Once confirmed, the count down will start immediately.\n'
+            '"!sl cancel": cancel the restoration. Can be called before or after confirmation.\n'
+            '"!sl rm <int:id>": remove a backup by id')

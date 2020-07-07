@@ -2,6 +2,7 @@ import os
 import sys
 dependencies = ['mcBasicLib']
 
+
 def load(log, core):
     try:
         import oss2
@@ -11,6 +12,7 @@ def load(log, core):
         log.error('Plugin aliyun-saveload is not going to work')
         return
     try:
+        # noinspection PyProtectedMember
         import crcmod._crcfunext
     except:
         log.error('The C extension of python package "crcmod" is not correctly installed. \
