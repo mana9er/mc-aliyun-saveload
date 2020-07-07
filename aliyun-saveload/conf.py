@@ -24,7 +24,6 @@ class Config:
         self.tmp_path = config_dict['tmp-path']
         utils.init_assert((self.permission_level == 'op') or (self.permission_level == 'any'), 'permission-level should be op or any')
         utils.init_assert(isinstance(self.max_backup_num, int) and (self.max_backup_num > 0), 'max-backup-num should be positive integer')
-        utils.init_assert(os.path.isdir(self.save_path), 'save-path is not a valid directory')
         utils.init_assert(self.format == 'zip', 'currently support zip format only')
         utils.init_assert(isinstance(self.restore_waiting, int) and (self.restore_waiting > 0), 'restore-waiting-sec should be positive integer')
         utils.init_assert(isinstance(self.restore_countdown, int) and (self.restore_countdown > 0), 'restore-countdown-sec should be positive integer')
