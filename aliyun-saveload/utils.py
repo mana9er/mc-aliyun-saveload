@@ -3,6 +3,7 @@ import os
 import json
 import shutil
 import time
+import oss2
 from . import conf
 from zipfile import ZipFile, ZIP_DEFLATED
 
@@ -13,33 +14,38 @@ def init_assert(expr, msg):
     if not expr:
         raise InitError(msg)
         
-def dump_info(info):
-    filename = conf.config.info_filename
-    with open(filename, 'w', encoding='utf-8') as info_f:
-        json.dump(info, info_f, indent=2)
+def convert_info(info_dict):
+    return {
+        'x-oss-meta-time': str(info_dict['time']),
+        'x-oss-meta-creator': info_dict['creator'],
+        'x-oss-meta-description': bytes(info_dict['description'], encoding='utf-8')
+    }
 
-def load_info():
-    '''
-    load a list of dict, containing key:
-        time (time stamp, int)
-        creator (player name, string)
-        description (string)
-    '''
-    filename = conf.config.info_filename
-    if not os.path.exists(filename):
-        conf.config.log.warning('Failed to find previous backup infomation')
-        conf.config.log.info('Creating empty info file...')
-        info = []
-        dump_info(info)
+def convert_info_back(headers):
+    return {
+        'time': int(headers['x-oss-meta-time']),
+        'creator': headers['x-oss-meta-creator'],
+        'description': str(bytes(headers['x-oss-meta-description'], encoding='latin-1'), encoding='utf-8')
+    }
+
+def checkobj(name):
+    try:
+        headers = conf.config.bucket.head_object(name).headers
+        info = convert_info_back(headers)
+        if name != headers['x-oss-meta-time']:
+            return None
         return info
-    with open(filename, 'r', encoding='utf-8') as info_f:
-        info = json.load(info_f)
-    init_assert(isinstance(info, list), 'When loading info file: top-level entity should be a list.')
-    for backup in info:
-        init_assert(isinstance(backup['time'], int), 'When loading info file: time should be integer')
-        init_assert(isinstance(backup['creator'], str), 'When loading info file: creator should be string')
-        init_assert(isinstance(backup['description'], str), 'When loading info file: description should be string')
-    return info
+    except:
+        return None
+
+def get_backup_list():
+    res = []
+    for obj in oss2.ObjectIterator(conf.config.bucket):
+        info = checkobj(obj.key)
+        if info:
+            res.append(info)
+    res.sort(key=lambda v: v['time'])
+    return res
 
 def dump_timer(timer):
     filename = conf.config.timer_filename
@@ -58,32 +64,32 @@ def load_timer():
         timer = int(timer_f.read())
     init_assert(timer > 0, 'Expecting positive timer')
 
-def getfile(info_dict):
-    return os.path.join(conf.config.save_path, 'backup-{}.zip'.format(info_dict['time']))
-
-def confirm_backup_list(info_list):
-    for i in reversed(range(len(info_list))):
-        if not os.path.isfile(getfile(info_list[i])):
-            info_list.pop(i)
-
-def pack(target):
-    with ZipFile(target, 'w', compression=ZIP_DEFLATED, allowZip64=True, compresslevel=1) as zipf:
+def pack_upload(info):
+    headers = convert_info(info)
+    name = str(info['time'])
+    tmp_filename = os.path.join(conf.config.tmp_path, name + '.zip')
+    with ZipFile(tmp_filename, 'w', compression=ZIP_DEFLATED, allowZip64=True, compresslevel=1) as zipf:
         for root, dirs, files in os.walk('.'):
             for f in files:
                 zipf.write(os.path.join(root, f))
+    conf.config.bucket.put_object_from_file(name, tmp_filename, headers=headers)
+    os.remove(tmp_filename)
 
-def unpack(target):
+def download_unpack(info):
+    name = str(info['time'])
+    tmp_filename = os.path.join(conf.config.tmp_path, name + '.zip')
+    conf.config.bucket.get_object_to_file(name, tmp_filename)
     for filename in os.listdir('.'):
         if os.path.isdir(filename):
             shutil.rmtree(filename)
         else:
             os.remove(filename)
-    shutil.unpack_archive(target, '.')
+    shutil.unpack_archive(tmp_filename, '.')
+    os.remove(tmp_filename)
 
-def try_remove(backup):
-    filename = getfile(backup)
-    if os.path.isfile(filename):
-        os.remove(filename)
+def try_remove(info):
+    name = str(info['time'])
+    conf.config.bucket.delete_object(name)
 
 def format_description(backup):
     time_string = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(backup['time']))

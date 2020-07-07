@@ -17,15 +17,13 @@ class SaveLoad(QtCore.QObject):
         
         # load config, data and dependency
         try:
-            self.info = utils.load_info()
             self.auto_backup_remain = utils.load_timer()
-            utils.confirm_backup_list(self.info)
             self.mclib = core.get_plugin('mcBasicLib')
             if not self.mclib:
                 raise utils.InitError('dependency mcBasicLib not found.')
         except:
             self.log.error(str(sys.exc_info()[0]) + str(sys.exc_info()[1]))
-            self.log.error('Plugin saveload is not going to work.')
+            self.log.error('Plugin aliyun saveload is not going to work.')
             return
         
         # create workers, thread and timer
@@ -93,7 +91,7 @@ class SaveLoad(QtCore.QObject):
         self.mclib.tell(player, conf.help_message)
     
     def list(self, player, msg):
-        message = '\n'.join(['{}: '.format(i) + utils.format_description(backup) for i, backup in enumerate(self.info)])
+        message = '\n'.join(['{}: '.format(i) + utils.format_description(backup) for i, backup in enumerate(utils.get_backup_list())])
         self.mclib.tell(player, message)
     
     def direct_backup(self, backup_info):
@@ -125,14 +123,13 @@ class SaveLoad(QtCore.QObject):
     
     def on_backup_complete(self, backup_info):
         self.busy_backup = False
-        self.info.append(backup_info)
-        while len(self.info) > conf.config.max_backup_num:
-            utils.try_remove(self.info[0])
-            self.info.pop(0)
-        utils.dump_info(self.info)
-        message = 'Backup complete!\n' + utils.format_description(backup_info)
         if self.core.server_running:
             self.core.write_server('/save-on')
+        backup_list = utils.get_backup_list()
+        if len(backup_list) > conf.config.max_backup_num:
+            for i in range(len(backup_list) - conf.config.max_backup_num):
+                utils.try_remove(backup_list[i])
+        message = 'Backup complete!\n' + utils.format_description(backup_info)
         self.broadcast(message)
         
     def restore(self, player, msg):
@@ -152,7 +149,7 @@ class SaveLoad(QtCore.QObject):
                 self.mclib.tell(player, '"{}" is not a valid integer'.format(msg))
                 return
         try:
-            target = self.info[target]
+            target = utils.get_backup_list()[target]
         except IndexError:
             self.mclib.tell(player, 'target backup does not exist')
             return
@@ -183,7 +180,6 @@ class SaveLoad(QtCore.QObject):
         self.broadcast('Time before restoration: {}s'.format(count))
     
     def on_restore_trigger(self, backup):
-        target = utils.getfile(backup)
         self.broadcast('start restoration, stop server')
         def restore():
             self.log.info('start restoration, console freeze')
@@ -191,7 +187,7 @@ class SaveLoad(QtCore.QObject):
                 self.core.sig_server_stop.disconnect(restore)
             except:
                 pass
-            utils.unpack(target)
+            utils.download_unpack(backup)
             self.busy_restore = False
             self.core.start_server()
 
@@ -213,11 +209,11 @@ class SaveLoad(QtCore.QObject):
         except:
             self.mclib.tell(player, '"{}" is not a valid integer'.format(msg))
             return
-        if (target < 0) or (target >= len(self.info)):
+        backup_list = utils.get_backup_list()
+        if (target < 0) or (target >= len(backup_list)):
             self.mclib.tell(player, '{} is out of range'.format(target))
         else:
-            utils.try_remove(self.info[target])
-            self.info.pop(target)
+            utils.try_remove(backup_list[target])
             self.mclib.tell(player, 'backup {} is removed successfully'.format(target))
     
     def on_auto_backup_count(self):

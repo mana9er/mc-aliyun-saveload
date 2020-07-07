@@ -17,7 +17,7 @@ class BackupWorker(QtCore.QObject):
         if not self.info:
             return
         conf.config.log.debug('start packing')
-        utils.pack(utils.getfile(self.info))
+        utils.pack_upload(self.info)
         conf.config.log.debug('complete packing')
         self.complete.emit(self.info)
         self.info = None
