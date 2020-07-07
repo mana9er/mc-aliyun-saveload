@@ -63,6 +63,7 @@ def load_timer():
     with open(filename, 'r', encoding='utf-8') as timer_f:
         timer = int(timer_f.read())
     init_assert(timer > 0, 'Expecting positive timer')
+    return timer
 
 def pack_upload(info):
     headers = convert_info(info)
