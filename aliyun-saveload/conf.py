@@ -11,7 +11,6 @@ class Config:
             config_dict = json.load(config_f)
         self.permission_level = config_dict['permission-level']
         self.max_backup_num = config_dict['max-backup-num']
-        self.save_path = config_dict['save-path']
         self.format = config_dict['format']
         self.restore_waiting = config_dict['restore-waiting-sec']
         self.restore_countdown = config_dict['restore-countdown-sec']
