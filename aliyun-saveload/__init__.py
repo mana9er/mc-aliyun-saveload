@@ -18,7 +18,7 @@ def load(log, core):
         log.error('Plugin aliyun-saveload is not going to work')
         return
     from . import main, conf, utils
-    root_dir = os.path.join(core.root_dir, 'saveload2')
+    root_dir = os.path.join(core.root_dir, 'aliyun-saveload')
     config_filename = os.path.join(root_dir, 'config.json')
     timer_filename = os.path.join(root_dir, 'auto-backup-timer.txt')
     try:
