@@ -73,6 +73,13 @@ def load_timer():
     init_assert(timer > 0, 'Expecting positive timer')
     return timer
 
+def should_ignore(path):
+    path = os.path.abspath(path)
+    for ignore_prefix in conf.config.ignore:
+        if path.startswith(os.path.abspath(ignore_prefix)):
+            return True
+    return False
+
 def multipart_upload(bucket, name, filename, headers):
     total_size = os.path.getsize(filename)
     part_size = oss2.determine_part_size(total_size, preferred_size=100 * 1024)
@@ -96,7 +103,8 @@ def pack_upload(info):
     with ZipFile(tmp_filename, 'w', compression=ZIP_DEFLATED, allowZip64=True, compresslevel=1) as zipf:
         for root, dirs, files in os.walk('.'):
             for f in files:
-                zipf.write(os.path.join(root, f))
+                if not should_ignore(os.path.join(root, f)):
+                    zipf.write(os.path.join(root, f))
     try:
         multipart_upload(conf.config.bucket, name, tmp_filename, headers)
     except Exception as e:
@@ -109,10 +117,11 @@ def download_unpack(info):
     tmp_filename = os.path.join(conf.config.tmp_path, name + '.zip')
     conf.config.bucket.get_object_to_file(name, tmp_filename)
     for filename in os.listdir('.'):
-        if os.path.isdir(filename):
-            shutil.rmtree(filename)
-        else:
-            os.remove(filename)
+        if not should_ignore(filename):
+            if os.path.isdir(filename):
+                shutil.rmtree(filename)
+            else:
+                os.remove(filename)
     shutil.unpack_archive(tmp_filename, '.')
     os.remove(tmp_filename)
 

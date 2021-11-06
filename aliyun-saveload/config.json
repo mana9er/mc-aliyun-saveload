@@ -1,13 +1,16 @@
 {
     "permission-level": "op",
-    "max-backup-num": 3,
+    "max-backup-num": 20,
     "format": "zip",
     "restore-waiting-sec": 30,
     "restore-countdown-sec": 15,
     "auto-backup-hours": 24,
-    "oss-endpoint": ,
-    "accesskey-id": ,
-    "accesskey-secret": ,
-    "bucket-name": ,
-    "tmp-path": 
+    "oss-endpoint": "",
+    "accesskey-id": "",
+    "accesskey-secret": "",
+    "bucket-name": "",
+    "tmp-path": "",
+    "ignore": [
+        "./example"
+    ]
 }

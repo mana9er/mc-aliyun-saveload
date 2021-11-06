@@ -22,6 +22,10 @@ class Config:
         self.auth = oss2.Auth(accesskey_id, accesskey_secret)
         self.bucket = oss2.Bucket(self.auth, endpoint, bucket_name)
         self.tmp_path = config_dict['tmp-path']
+        if 'ignore' in config_dict:
+            self.ignore = config_dict['ignore']
+        else:
+            self.ignore = []
         utils.init_assert((self.permission_level == 'op') or (self.permission_level == 'any'),
                           'permission-level should be op or any')
         utils.init_assert(isinstance(self.max_backup_num, int) and (self.max_backup_num > 0),
@@ -35,6 +39,10 @@ class Config:
                           'auto-backup-hours should be positive integer')
         utils.init_assert(os.path.isdir(self.tmp_path),
                           'tmp-path is not a valid directory')
+        utils.init_assert(isinstance(self.ignore, list),
+                          'ignore should be a list')
+        for ignore_prefix in self.ignore:
+            utils.init_assert(isinstance(ignore_prefix, str), 'ignore should be a list of strings')
 
 
 def load_text():
