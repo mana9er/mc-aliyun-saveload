@@ -38,12 +38,12 @@ class Config:
 
 
 def load_text():
-    return ('"!sl help": show this help message.\n'
-            '"!sl list": list the existing backups.\n'
-            '"!sl backup [description]": make a backup for the current server status. '
+    return ('"!aliyun-sl help": show this help message.\n'
+            '"!aliyun-sl list": list the existing backups.\n'
+            '"!aliyun-sl backup [description]": make a backup for the current server status. '
             'You can add description by adding optional argument to the end.\n'
-            '"!sl restore <last | int:id>": use the selected backup to restore the server. '
+            '"!aliyun-sl restore <last | int:id>": use the selected backup to restore the server. '
             'You can use keyword "last" to indicate the latest backup. This command requires confirmation.\n'
-            '"!sl confirm": confirm the restoration. Once confirmed, the count down will start immediately.\n'
-            '"!sl cancel": cancel the restoration. Can be called before or after confirmation.\n'
-            '"!sl rm <int:id>": remove a backup by id')
+            '"!aliyun-sl confirm": confirm the restoration. Once confirmed, the count down will start immediately.\n'
+            '"!aliyun-sl cancel": cancel the restoration. Can be called before or after confirmation.\n'
+            '"!aliyun-sl rm <int:id>": remove a backup by id')

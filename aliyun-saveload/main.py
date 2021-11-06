@@ -5,7 +5,7 @@ from . import utils, worker, conf
 
 
 class SaveLoad(QtCore.QObject):
-    cmd_prefix = '!sl '
+    cmd_prefix = '!aliyun-sl '
     sig_prepare_backup = QtCore.pyqtSignal(dict)
     sig_backup_immediately = QtCore.pyqtSignal()
     sig_prepare_restore = QtCore.pyqtSignal(dict)
