@@ -73,6 +73,21 @@ def load_timer():
     init_assert(timer > 0, 'Expecting positive timer')
     return timer
 
+def multipart_upload(bucket, name, filename, headers):
+    total_size = os.path.getsize(filename)
+    part_size = oss2.determine_part_size(total_size, preferred_size=100 * 1024)
+    upload_id = bucket.init_multipart_upload(name, headers=headers).upload_id
+    parts = []
+    with open(filename, 'rb') as fileobj:
+        part_number = 1
+        offset = 0
+        while offset < total_size:
+            num_to_upload = min(part_size, total_size - offset)
+            result = bucket.upload_part(name, upload_id, part_number, oss2.SizedFileAdapter(fileobj, num_to_upload))
+            parts.append(oss2.models.PartInfo(part_number, result.etag))
+            offset += num_to_upload
+            part_number += 1
+    bucket.complete_multipart_upload(name, upload_id, parts)
 
 def pack_upload(info):
     headers = convert_info(info)
@@ -82,7 +97,10 @@ def pack_upload(info):
         for root, dirs, files in os.walk('.'):
             for f in files:
                 zipf.write(os.path.join(root, f))
-    conf.config.bucket.put_object_from_file(name, tmp_filename, headers=headers)
+    try:
+        multipart_upload(conf.config.bucket, name, tmp_filename, headers)
+    except Exception as e:
+        SaveLoad.log.error('error when uploading to OSS: ' + str(e))
     os.remove(tmp_filename)
 
 
